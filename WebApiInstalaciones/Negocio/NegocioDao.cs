@@ -190,7 +190,9 @@ namespace Negocio
                                 nombreCoordinador = drV.GetString(23),
                                 nombreServicio = drV.GetString(24),
                                 nombreEstado = drV.GetString(25),
-                                incidencia = drV.GetString(26)
+                                incidencia = drV.GetString(26),
+                                fechaInicioPD = drV.GetDateTime(27).ToString("dd/MM/yyyy"),
+                                fechaFinPD = drV.GetDateTime(28).ToString("dd/MM/yyyy")
                             };
 
                             SqlCommand cmdF = con.CreateCommand();
@@ -456,7 +458,6 @@ namespace Negocio
 
                     return m;
                 }
-
             }
             catch (Exception ex)
             {
@@ -531,6 +532,135 @@ namespace Negocio
                     cn.Close();
                 }
                 return m;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        // nuevo
+
+        public static Mensaje SaveParteDiario(ParteDiario t)
+        {
+            try
+            {
+                int coordinadorId = 0;
+                int cuadrillaId = 0;
+
+                Mensaje m = null;
+
+                using (SqlConnection con = new SqlConnection(db))
+                {
+                    con.Open();
+
+                    foreach (var d in t.personals)
+                    {
+                        SqlCommand cmdD = con.CreateCommand();
+                        cmdD.CommandTimeout = 0;
+                        cmdD.CommandType = CommandType.StoredProcedure;
+                        cmdD.CommandText = "DSIGE_PROY_M_SavePersonal";
+                        cmdD.Parameters.Add("@personalId", SqlDbType.Int).Value = d.personalId;
+                        cmdD.Parameters.Add("@id_empresa", SqlDbType.Int).Value = d.empresaId;
+                        cmdD.Parameters.Add("@id_tipodoc", SqlDbType.Int).Value = d.tipoDocId;
+                        cmdD.Parameters.Add("@nrodocumento_personal", SqlDbType.VarChar).Value = d.nroDocumento;
+                        cmdD.Parameters.Add("@apellidos_personal", SqlDbType.VarChar).Value = d.apellidos;
+                        cmdD.Parameters.Add("@nombres_personal", SqlDbType.VarChar).Value = d.nombre;
+                        cmdD.Parameters.Add("@id_cargo", SqlDbType.Int).Value = d.cargoId;
+                        cmdD.Parameters.Add("@direccion_personal", SqlDbType.VarChar).Value = d.direccion;
+                        cmdD.Parameters.Add("@id_distrito", SqlDbType.Int).Value = d.distritoId;
+                        cmdD.Parameters.Add("@estado", SqlDbType.Int).Value = d.estado;
+                        cmdD.Parameters.Add("@usuario", SqlDbType.Int).Value = d.usuarioId;
+                        SqlDataReader drD = cmdD.ExecuteReader();
+
+                        if (drD.HasRows)
+                        {
+                            while (drD.Read())
+                            {
+                                if (d.cargoId == 5)
+                                    coordinadorId = drD.GetInt32(0);
+                                else
+                                    cuadrillaId = drD.GetInt32(0);
+
+                            }
+                        }
+                    }
+
+                    SqlCommand cmdO = con.CreateCommand();
+                    cmdO.CommandTimeout = 0;
+                    cmdO.CommandType = CommandType.StoredProcedure;
+                    cmdO.CommandText = "DSIGE_PROY_M_SaveParteDiario2";
+                    cmdO.Parameters.Add("@parteDiarioId", SqlDbType.Int).Value = t.identity;
+                    cmdO.Parameters.Add("@id_empresa", SqlDbType.Int).Value = t.empresaId;
+                    cmdO.Parameters.Add("@id_servicios", SqlDbType.Int).Value = t.servicioId;
+                    cmdO.Parameters.Add("@fechaasignacion_pd", SqlDbType.VarChar).Value = t.fechaAsignacion;
+                    cmdO.Parameters.Add("@fecharegistro_pd", SqlDbType.VarChar).Value = t.fechaRegistro;
+                    cmdO.Parameters.Add("@horainicio_pd", SqlDbType.VarChar).Value = t.horaInicio;
+                    cmdO.Parameters.Add("@horatermino_pd", SqlDbType.VarChar).Value = t.horaTermino;
+                    cmdO.Parameters.Add("@totalhoras_pd", SqlDbType.VarChar).Value = t.totalHoras;
+                    cmdO.Parameters.Add("@cantidadhoras_pd", SqlDbType.Decimal).Value = t.cantidadHoras;
+                    cmdO.Parameters.Add("@precio_pd", SqlDbType.Decimal).Value = t.precio;
+                    cmdO.Parameters.Add("@totalsoles_pd", SqlDbType.Decimal).Value = t.totalSoles;
+                    cmdO.Parameters.Add("@id_usuarioefectivopolicial", SqlDbType.Int).Value = t.usuarioEfectivoPolicialId;
+                    cmdO.Parameters.Add("@id_personalcoordinar", SqlDbType.Int).Value = coordinadorId == 0 ? t.personalCoordinarId : coordinadorId;
+                    cmdO.Parameters.Add("@id_personaljefecuadrilla", SqlDbType.Int).Value = cuadrillaId == 0 ? t.personalJefeCuadrillaId : cuadrillaId;
+                    cmdO.Parameters.Add("@lugartrabajo_pd", SqlDbType.VarChar).Value = t.lugarTrabajoPD;
+                    cmdO.Parameters.Add("@nroobratd_pd", SqlDbType.VarChar).Value = t.nroObraTD;
+                    cmdO.Parameters.Add("@observaciones_pd", SqlDbType.VarChar).Value = t.observacionesPD;
+                    cmdO.Parameters.Add("@latitud_pd", SqlDbType.VarChar).Value = t.latitud;
+                    cmdO.Parameters.Add("@longitud_pd", SqlDbType.VarChar).Value = t.longitud;
+                    cmdO.Parameters.Add("@firma_efectivopolicial", SqlDbType.VarChar).Value = t.firmaEfectivoPolicial;
+                    cmdO.Parameters.Add("@firma_jefecuadrilla", SqlDbType.VarChar).Value = t.firmaJefeCuadrilla;
+                    cmdO.Parameters.Add("@estado", SqlDbType.Int).Value = t.estadoId;
+                    cmdO.Parameters.Add("@usuarioId", SqlDbType.Int).Value = t.usuarioId;
+                    cmdO.Parameters.Add("@incidencia", SqlDbType.VarChar).Value = t.incidencia;
+                    cmdO.Parameters.Add("@fechaInicioPD", SqlDbType.VarChar).Value = t.fechaInicioPD;
+                    cmdO.Parameters.Add("@fechaFinPD", SqlDbType.VarChar).Value = t.fechaFinPD;
+                    SqlDataReader drO = cmdO.ExecuteReader();
+
+                    if (drO.HasRows)
+                    {
+                        m = new Mensaje();
+                        while (drO.Read())
+                        {
+                            m.mensaje = "Enviado";
+                            m.codigoRetorno = drO.GetInt32(0);
+                            m.codigoBase = t.parteDiarioId;
+
+                            List<MensajeDetalle> de = new List<MensajeDetalle>();
+                            foreach (var f in t.photos)
+                            {
+                                SqlCommand cmdF = con.CreateCommand();
+                                cmdF.CommandTimeout = 0;
+                                cmdF.CommandType = CommandType.StoredProcedure;
+                                cmdF.CommandText = "DSIGE_PROY_M_SaveParteDiarioPhoto";
+                                cmdF.Parameters.Add("@photoId", SqlDbType.Int).Value = f.identity;
+                                cmdF.Parameters.Add("@id_partediario", SqlDbType.Int).Value = m.codigoRetorno;
+                                cmdF.Parameters.Add("@fotourl", SqlDbType.VarChar).Value = f.fotoUrl;
+                                cmdF.Parameters.Add("@estado", SqlDbType.Int).Value = f.estado;
+                                cmdF.Parameters.Add("@usuarioId", SqlDbType.Int).Value = t.usuarioId;
+                                SqlDataReader drF = cmdF.ExecuteReader();
+
+                                if (drF.HasRows)
+                                {
+                                    while (drF.Read())
+                                    {
+                                        de.Add(new MensajeDetalle()
+                                        {
+                                            detalleBaseId = f.photoId,
+                                            detalleRetornoId = drF.GetInt32(0)
+                                        });
+                                    }
+                                }
+                            }
+                            m.detalle = de;
+                        }
+                    }
+
+                    con.Close();
+
+                    return m;
+                }
             }
             catch (Exception ex)
             {

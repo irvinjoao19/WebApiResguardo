@@ -37,6 +37,8 @@ namespace Entidades
         public string nombreServicio { get; set; }
         public string nombreEstado { get; set; }
         public string incidencia { get; set; }
+        public string fechaInicioPD { get; set; }
+        public string fechaFinPD { get; set; }
         public List<Personal> personals { get; set; }
         public List<ParteDiarioPhoto> photos { get; set; }
     }
